@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────
+    // Helper: any authenticated Firebase user is admin
+    // This matches the app's auth-context.tsx logic.
+    // To restrict to specific admins, replace with:
+    //   exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+    // ─────────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // ─────────────────────────────────────────────────
+    // Admins collection (optional — for future use)
+    // ─────────────────────────────────────────────────
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // ─────────────────────────────────────────────────
+    // News — public read, admin write/delete
+    // ─────────────────────────────────────────────────
+    match /news/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // Careers — public read, admin write/delete
+    // ─────────────────────────────────────────────────
+    match /careers/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // Applications — anyone can submit, only admin can read/update
+    // ─────────────────────────────────────────────────
+    match /applications/{docId} {
+      allow create: if true
+        && request.resource.data.keys().hasAll(['applicantName','applicantEmail','message','status','appliedAt'])
+        && request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ─────────────────────────────────────────────────
+    // Messages — anyone can submit, only admin can read/update
+    // ─────────────────────────────────────────────────
+    match /messages/{docId} {
+      allow create: if true
+        && request.resource.data.keys().hasAll(['name','email','subject','message','createdAt'])
+        && request.resource.data.status == 'new';
+      allow read, update, delete: if isAdmin();
+    }
+
+  }
+}
