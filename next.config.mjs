@@ -6,8 +6,9 @@ const nextConfig = {
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],
   },
-  // Suppress certain hydration warnings from firebase
   reactStrictMode: true,
+  // Required: prevents firebase-admin from being bundled on the client/edge
+  serverExternalPackages: ["firebase-admin"],
 };
 
 export default nextConfig;

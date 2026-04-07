@@ -1,7 +1,8 @@
 "use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 interface AuthContextType {
   user: User | null;
@@ -13,20 +14,31 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
+
+      if (firebaseUser) {
+        // Check Firestore for admin role
+        try {
+          const snap = await getDoc(doc(db, "admins", firebaseUser.uid));
+          setIsAdmin(snap.exists() && snap.data()?.role === "admin");
+        } catch {
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+
       setLoading(false);
     });
-    // Safety timeout — if Firebase never responds, stop spinning after 5s
+
     const timeout = setTimeout(() => setLoading(false), 5000);
     return () => { unsubscribe(); clearTimeout(timeout); };
   }, []);
-
-  // Any authenticated Firebase user gets admin access
-  const isAdmin = !!user;
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin }}>
