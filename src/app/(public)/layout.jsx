@@ -1,4 +1,4 @@
-import { Inter, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -12,26 +12,34 @@ import {
 import "@/config/validate.config";
 import "../globals.css";
 
+// Fonts are bundled in src/assets/fonts (see README there), so builds never fetch from Google.
+// Each file is a variable font; the weight range below is what the file actually provides.
+
 // Display / heading font: a soft, modern geometric sans.
-const display = Plus_Jakarta_Sans({
-  weight: ["500", "600", "700"],
-  subsets: ["latin"],
+const display = localFont({
+  src: "../../assets/fonts/PlusJakartaSans-Variable-latin.woff2",
+  weight: "500 700",
+  style: "normal",
   display: "swap",
   variable: "--font-display",
 });
 
-const inter = Inter({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
+const inter = localFont({
+  src: "../../assets/fonts/Inter-Variable-latin.woff2",
+  weight: "400 700",
+  style: "normal",
   display: "swap",
   variable: "--font-inter",
 });
 
-const mono = JetBrains_Mono({
-  weight: ["400", "500"],
-  subsets: ["latin"],
+const mono = localFont({
+  src: "../../assets/fonts/JetBrainsMono-Variable-latin.woff2",
+  weight: "400 500",
+  style: "normal",
   display: "swap",
   variable: "--font-mono",
+  adjustFontFallback: false,
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
 });
 
 export async function generateMetadata() {
